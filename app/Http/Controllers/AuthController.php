@@ -15,43 +15,39 @@ class AuthController extends Controller
     }
 
 
-    public function login(Request $request){
-        $validator=Validator::make($request->all(),[
-           'email'=>'required|string|email',
-           'password'=>'required|string|min:8'
+    public function login(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email|exists:users',
+            'password' => 'required|string|min:8'
         ]);
-        if($validator->fails())
+        if ($validator->fails())
             return response()->json($validator->errors());
-        $user=User::where('email',$request->email)->first();
-        if(isset($user))
-        {//tcnwazdiujnyefry
-            if($user->is_activated){
-                if($user->password == $request->password)
-                {
-                    $token=JWTAuth::fromUser($user);
-                    return response()->json([
-                        'message'=>'success',
-                        'token'=>$token
-                    ]);
-                }
+        $user = User::where('email', $request->email)->first();
+        if ($user->is_activated) {
+            if ($user->password == $request->password) {
+                $token = JWTAuth::fromUser($user);
                 return response()->json([
-                    'message'=>'failure ! password is not correct',
+                    'message' => 'success',
+                    'token' => $token
                 ]);
             }
             return response()->json([
-                'message'=>'failure ! you need to verify your account first',
+                'message' => 'failure ! password is not correct',
             ]);
         }
+        $user->delete();
         return response()->json([
-            'message'=>'failure ! User does not exist',
+           'message'=>'you need to register first'
         ]);
     }
 
 
-    public function user_profile(){
-        $user=JWTAuth::user();
+    public function user_profile()
+    {
+        $user = JWTAuth::user();
         return response()->json([
-           'user'=>$user
+            'user' => $user
         ]);
     }
 }
