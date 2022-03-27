@@ -16,12 +16,12 @@ class CreateUserVerificationsTable extends Migration
         Schema::create('user_verifications', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('user_id');
-            $table->string('code');
+            $table->integer('code');
             $table->timestamps();
         });
 
         Schema::table('users', function (Blueprint $table) {
-            $table->boolean('is_activated')->default(0);
+            $table->boolean('is_activated')->after('email')->default(0);
         });
     }
 
