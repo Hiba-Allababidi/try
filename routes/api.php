@@ -45,7 +45,7 @@ Route::group(['prefix' => 'auth'], function () {
 
     Route::group(['controller' => RegisterController::class], function () {
         Route::post('register', 'register');
-        Route::post('verify_user', 'verify_user');
+        Route::post('verify_user/{id}', 'verify_user');
     });
 
 });

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
@@ -40,6 +41,13 @@ class AuthController extends Controller
         return response()->json([
            'message'=>'you need to register first'
         ]);
+    }
+
+    public function logout(){
+        Auth::logout();
+        return response()->json([
+            'message'=>'success'
+        ],200);
     }
 
 
