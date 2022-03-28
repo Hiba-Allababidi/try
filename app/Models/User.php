@@ -12,7 +12,6 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
  * @method static create(array $array)
  * @method static find($id)
  * @method static where(string $string, $email)
- * @method static lastInsertId()
  * @method static firstwhere(string $string, $email)
  */
 class User extends Authenticatable implements JWTSubject

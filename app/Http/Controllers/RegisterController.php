@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\User_verification;
 use App\Notifications\EmailVerification;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,8 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Swift_DependencyException;
+use Swift_RfcComplianceException;
+use Swift_SwiftException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class RegisterController extends Controller
@@ -38,18 +41,13 @@ class RegisterController extends Controller
             ['password' => bcrypt($request->password)]
         ));
 
-        $this->send_verification_code($user);
-
-        return response()->json([
-            'message' => 'success',
-            'user' => $user
-        ], 200);
+        return $this->send_verification_code($user);
     }
 
 
     public function send_verification_code($user)
     {
-        $user_id=$user->id;
+        $user_id = $user->id;
         $code = mt_rand(100000, 999999);
         $details = [
             'title' => 'Hello',
@@ -58,14 +56,13 @@ class RegisterController extends Controller
             ]
         ];
 
-        try{
+        try {
             Notification::send($user, new EmailVerification($details));
+        } catch (Swift_SwiftException $exception) {
+            return response()->json([
+                'message' => 'email does not exist'
+            ], 400);
         }
-        catch (Swift_DependencyException $exception){
-            return response()->json($exception->getMessage());
-        }
-
-
 
         User_verification::create([
             'user_id' => $user_id,
@@ -73,33 +70,33 @@ class RegisterController extends Controller
         ]);
 
         return response()->json([
-           'message'=>'success'
-        ]);
+            'message' => 'success',
+            'user' => $user
+        ], 201);
     }
 
 
     public function verify_user($id, Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'code' => 'required|int'
+            'code' => 'required|int|exists:user_verifications'
         ]);
         if ($validator->fails())
-            return response()->json($validator->errors());
-
-        $entered_code = $request->code;
-        $code = DB::table('user_verifications')->where('user_id', $id)->pluck('code');
-        if ($entered_code == $code[0]) {
-            DB::table('users')->where('id', $id)
-                ->update(['is_activated' => 1, 'email_verified_at' => Carbon::now()]);
-            $user = User::find($id)->makeVisible(['password']);
-            $token = JWTAuth::fromUser($user);
+            return response()->json($validator->errors(), 400);
+        $user_verification = User_verification::firstWhere('code', $request->code);
+        if ($user_verification->isExpire())
             return response()->json([
-                'message' => 'success',
-                'token' => $token
-            ]);
-        } else
-            return response()->json([
-                'message' => 'failure'
-            ]);
+                'message' => 'this verification code has expired'
+            ], 401); 
+        $user_verification->delete();
+        $user = User::find($id)->makeVisible(['password']);
+        DB::table('users')->update(['is_activated' => 1, 'email_verified_at' => Carbon::now()]);
+        //$user->update(['is_activated' => 1, 'email_verified_at' => Carbon::now()]);
+        $user->makeVisible('password');
+        $token = JWTAuth::fromUser($user);
+        return response()->json([
+            'message' => 'success',
+            'token' => $token
+        ], 200);
     }
 }

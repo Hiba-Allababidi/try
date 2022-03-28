@@ -19,9 +19,9 @@ class ResetPasswordController extends Controller
             'email' => 'required|string|email|exists:users'
         ]);
         if ($validator->fails())
-            return response()->json($validator->errors());
+            return response()->json($validator->errors(), 400);
 
-        ResetCodePassword::where('email', $request->email)->delete();
+        // ResetCodePassword::where('email', $request->email)->delete();
 
         $user = User::firstWhere('email', $request->email);
 
@@ -30,7 +30,7 @@ class ResetPasswordController extends Controller
         return response()->json([
             'message' => 'success',
             'user' => $user
-        ],200);
+        ], 200);
     }
 
     public function send_reset_password_code($user)
@@ -39,9 +39,10 @@ class ResetPasswordController extends Controller
         $details = [
             'title' => 'Hello',
             'body' => [
-                'Reset password code'=>$code
+                'Reset password code' => $code
             ]
         ];
+
 
         Notification::send($user, new EmailVerification($details));
 
@@ -49,7 +50,6 @@ class ResetPasswordController extends Controller
             'email' => $user->email,
             'code' => $code
         ]);
-
     }
 
     public function check_reset_code(Request $request)
@@ -58,14 +58,14 @@ class ResetPasswordController extends Controller
             'code' => 'required|int|exists:reset_code_passwords'
         ]);
         if ($validator->fails())
-            return response()->json($validator->errors());
+            return response()->json($validator->errors(), 400);
 
         $passwordReset = ResetCodePassword::firstWhere('code', $request->code);
 
-        if($passwordReset->isExpire())
+        if ($passwordReset->isExpire())
             return response()->json([
                 'message' => 'password reset code is expired'
-            ], 422);
+            ], 401);
 
         return response()->json([
             'message' => 'success'
@@ -79,17 +79,17 @@ class ResetPasswordController extends Controller
             'password' => 'required|string|confirmed|min:8'
         ]);
         if ($validator->fails())
-            return response()->json($validator->errors());
+            return response()->json($validator->errors(), 400);
 
         $passwordReset = ResetCodePassword::firstWhere('code', $request->code);
         $user = User::firstwhere('email', $passwordReset->email);
         $user->update((['password' => bcrypt($request->password)]));
-        $user=$user->makeVisible('password');
+        $passwordReset->delete();
+        $user = $user->makeVisible('password');
         $token = JWTAuth::fromUser($user);
         return response()->json([
             'message' => 'success',
             'token' => $token
-        ],200);
-
+        ], 200);
     }
 }

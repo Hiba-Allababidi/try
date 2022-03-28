@@ -17,4 +17,18 @@ class User_verification extends Model
     public function user(){
         return $this->belongsTo(User::class,'user_id','id');
     }
+
+    /**
+     * check if the code is expired then deletes it
+     *
+     * @return bool
+     */
+    public function isExpire()
+    {
+        if ($this->created_at > now()->addHour()) {
+            $this->delete();
+            return true;
+        }
+        return false;
+    }
 }
