@@ -55,6 +55,7 @@ class RegisterController extends Controller
         try {
             Notification::send($user, new EmailVerification($details));
         } catch (Swift_SwiftException $exception) {
+            $user->delete();
             return response()->json([
                 'message' => 'email does not exist'
             ], 400);

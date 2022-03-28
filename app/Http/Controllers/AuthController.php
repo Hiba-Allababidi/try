@@ -56,8 +56,12 @@ class AuthController extends Controller
     public function user_profile()
     {
         $user = JWTAuth::user();
+        if(isset($user))
+            return response()->json([
+                'user' => $user
+            ], 200);
         return response()->json([
-            'user' => $user
-        ], 200);
+            'message'=>'user not found'
+        ],404);
     }
 }
