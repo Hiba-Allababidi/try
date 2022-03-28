@@ -38,9 +38,8 @@ class ResetPasswordController extends Controller
         $code = mt_rand(100000, 999999);
         $details = [
             'title' => 'Hello',
-            'body' => [
-                'Reset password code' => $code
-            ]
+            'message' => 'Your password reset code',
+            'code' => $code
         ];
 
 

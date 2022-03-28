@@ -6,15 +6,12 @@ use App\Models\User;
 use App\Models\User_verification;
 use App\Notifications\EmailVerification;
 use Carbon\Carbon;
-use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use Swift_DependencyException;
-use Swift_RfcComplianceException;
 use Swift_SwiftException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -51,9 +48,8 @@ class RegisterController extends Controller
         $code = mt_rand(100000, 999999);
         $details = [
             'title' => 'Hello',
-            'body' => [
-                'Verification code' => $code
-            ]
+            'message' => 'Your Verification code',
+            'code' => $code
         ];
 
         try {
@@ -87,7 +83,7 @@ class RegisterController extends Controller
         if ($user_verification->isExpire())
             return response()->json([
                 'message' => 'this verification code has expired'
-            ], 401); 
+            ], 401);
         $user_verification->delete();
         $user = User::find($id)->makeVisible(['password']);
         DB::table('users')->update(['is_activated' => 1, 'email_verified_at' => Carbon::now()]);

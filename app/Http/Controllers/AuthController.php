@@ -24,24 +24,24 @@ class AuthController extends Controller
             'password' => 'required|string|min:8'
         ]);
         if ($validator->fails())
-            return response()->json($validator->errors(),400);
+            return response()->json($validator->errors(), 400);
         $user = User::where('email', $request->email)->first();
         if ($user->is_activated) {
-            if (Hash::check($request->pasword,$user->password)) {
+            if (Hash::check($request->pasword, $user->password)) {
                 $token = JWTAuth::fromUser($user);
                 return response()->json([
                     'message' => 'success',
                     'token' => $token
-                ],200);
+                ], 200);
             }
             return response()->json([
                 'message' => 'password is not correct !',
-            ],401);
+            ], 401);
         }
         $user->delete();
         return response()->json([
             'message' => 'you need to register first !'
-        ],401);////
+        ], 401); ////
     }
 
     public function logout()
@@ -49,7 +49,7 @@ class AuthController extends Controller
         Auth::logout();
         return response()->json([
             'message' => 'success'
-        ],200);
+        ], 200);
     }
 
 
@@ -58,6 +58,6 @@ class AuthController extends Controller
         $user = JWTAuth::user();
         return response()->json([
             'user' => $user
-        ],200);
+        ], 200);
     }
 }

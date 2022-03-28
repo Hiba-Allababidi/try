@@ -18,7 +18,7 @@ class EmailVerification extends Notification
      */
     public function __construct($details)
     {
-        $this->details=$details;
+        $this->details = $details;
     }
 
     /**
@@ -42,7 +42,8 @@ class EmailVerification extends Notification
     {
         return (new MailMessage)
             ->greeting($this->details['title'])
-            ->line($this->details['body']);
+            ->line($this->details['message'])
+            ->line($this->details['code']);
     }
 
     /**
