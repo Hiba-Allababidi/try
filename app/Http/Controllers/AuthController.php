@@ -20,14 +20,18 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|string|email|exists:users',
+            'text' => 'required|string',
             'password' => 'required|string|min:8'
         ]);
         if ($validator->fails())
             return response()->json($validator->errors(), 400);
-        $user = User::where('email', $request->email)->first();
+        if (filter_var($request->text, FILTER_VALIDATE_EMAIL))
+            $user = User::firstWhere('email', $request->text);
+        else
+            $user=User::firstWhere('name',$request->text);
         if ($user->is_activated) {
-            if (Hash::check($request->pasword, $user->password)) {
+            if (Hash::check($request->password, $user->password)){
+            //if($request->password == $user->password){
                 $token = JWTAuth::fromUser($user);
                 return response()->json([
                     'message' => 'success',
@@ -41,7 +45,7 @@ class AuthController extends Controller
         $user->delete();
         return response()->json([
             'message' => 'you need to register first !'
-        ], 401); ////
+        ], 401);
     }
 
     public function logout()
@@ -56,12 +60,12 @@ class AuthController extends Controller
     public function user_profile()
     {
         $user = JWTAuth::user();
-        if(isset($user))
+        if (isset($user))
             return response()->json([
                 'user' => $user
             ], 200);
         return response()->json([
-            'message'=>'user not found'
-        ],404);
+            'message' => 'user not found'
+        ], 404);
     }
 }

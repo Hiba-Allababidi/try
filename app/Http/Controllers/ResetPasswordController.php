@@ -16,21 +16,28 @@ class ResetPasswordController extends Controller
     public function forgot_password(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|string|email|exists:users'
+            'text' => 'required|string'
         ]);
         if ($validator->fails())
             return response()->json($validator->errors(), 400);
 
-        // ResetCodePassword::where('email', $request->email)->delete();
+        if (filter_var($request->text, FILTER_VALIDATE_EMAIL))
+            $user = User::firstWhere('email', $request->text);
+        else
+            $user = User::firstWhere('name', $request->text);
 
-        $user = User::firstWhere('email', $request->email);
+        if (isset($user) && $user->is_activated) {
 
-        $this->send_reset_password_code($user);
+            $this->send_reset_password_code($user);
+            return response()->json([
+                'message' => 'success',
+                'user' => $user
+            ], 200);
+        }
 
         return response()->json([
-            'message' => 'success',
-            'user' => $user
-        ], 200);
+            'message' => 'you need to register first !'
+        ], 401);
     }
 
     public function send_reset_password_code($user)

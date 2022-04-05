@@ -73,7 +73,28 @@ class RegisterController extends Controller
     }
 
 
-    public function verify_user($id, Request $request)
+    public function Resend_verification_code($user)
+    {
+        $user_id = $user->id;
+        $code = mt_rand(100000, 999999);
+        $details = [
+            'title' => 'Hello',
+            'message' => 'Your Verification code',
+            'code' => $code
+        ];
+
+
+        Notification::send($user, new EmailVerification($details));
+        User_verification::find($user_id)->update(['code' => $code]);
+
+        return response()->json([
+            'message' => 'success',
+        ], 201);
+    }
+
+
+
+    public function verify_user(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'code' => 'required|int|exists:user_verifications'
@@ -85,6 +106,7 @@ class RegisterController extends Controller
             return response()->json([
                 'message' => 'this verification code has expired'
             ], 401);
+        $id=$user_verification->user_id;
         $user_verification->delete();
         $user = User::find($id)->makeVisible(['password']);
         DB::table('users')->update(['is_activated' => 1, 'email_verified_at' => Carbon::now()]);

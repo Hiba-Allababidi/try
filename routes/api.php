@@ -16,26 +16,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-/*Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});*/
-
-//Route::group([
-//    'middleware' => 'api',
-//    'prefix' => 'auth'
-//], function ($router) {
-//    Route::post('/login', [AuthController::class, 'login']);
-//    Route::post('/register', [AuthController::class, 'register']);
-//    Route::post('/logout', [AuthController::class, 'logout']);
-//    Route::post('/refresh', [AuthController::class, 'refresh']);
-//    Route::get('/user-profile', [AuthController::class, 'userProfile']);
-//});
-
-
 Route::group(['prefix' => 'auth'], function () {
-    Route::group([
-        'controller' => AuthController::class
-    ],
+    Route::group(
+        [
+            'controller' => AuthController::class
+        ],
         function () {
             Route::post('/login', 'login');
             Route::post('/logout', 'logout');
@@ -45,9 +30,9 @@ Route::group(['prefix' => 'auth'], function () {
 
     Route::group(['controller' => RegisterController::class], function () {
         Route::post('register', 'register');
-        Route::post('verify_user/{id}', 'verify_user');
+        Route::post('verify_user', 'verify_user');
+        Route::post('Resend_code', 'Resend_verification_code');
     });
-
 });
 
 Route::group(['controller' => ResetPasswordController::class], function () {
@@ -55,5 +40,3 @@ Route::group(['controller' => ResetPasswordController::class], function () {
     Route::post('check_reset_code', 'check_reset_code');
     Route::post('reset_password', 'reset_password');
 });
-
-
