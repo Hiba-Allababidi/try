@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ResetPasswordController;
 use Illuminate\Support\Facades\Route;
@@ -16,23 +17,25 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::group(['prefix' => 'auth'], function () {
-    Route::group(
-        [
-            'controller' => AuthController::class
-        ],
-        function () {
-            Route::post('/login', 'login');
-            Route::post('/logout', 'logout');
-            Route::get('user_profile', 'user_profile');
-        }
-    );
+// Route::group(['prefix' => 'auth'], function () {
+//     Route::group(
+//         ['controller' => AuthController::class],
+//         function () {
+//             Route::post('/login', 'login');
+//             Route::post('/logout', 'logout');
+//             Route::get('user_profile', 'user_profile');
+//         }
+//     );
 
     Route::group(['controller' => RegisterController::class], function () {
         Route::post('register', 'register');
         Route::post('verify_user', 'verify_user');
         Route::post('Resend_code', 'Resend_verification_code');
     });
+// });
+
+Route::group(['controller' => LoginController::class], function () {
+    Route::post('/login','login');
 });
 
 Route::group(['controller' => ResetPasswordController::class], function () {

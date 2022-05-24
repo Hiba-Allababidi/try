@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Models\Manager;
 use App\Models\User_verification;
 use App\Notifications\EmailVerification;
 use Carbon\Carbon;
@@ -24,7 +24,6 @@ class RegisterController extends Controller
      */
     public function register(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|between:2,30',
             'email' => 'required|string|unique:users|max:30',
@@ -33,18 +32,19 @@ class RegisterController extends Controller
         if ($validator->fails())
             return response()->json($validator->errors(), 400);
 
-        $user = User::create(array_merge(
-            $validator->validated(),
-            ['password' => bcrypt($request->password)]
-        ));
+        $manager = Manager::create([
+            'manager_name'=>$request->name,
+            'manager_email'=>$request->email,
+            'manager_password'=>bcrypt($request->password)
+        ]);
 
-        return $this->send_verification_code($user);
+        return $this->send_verification_code($manager);
     }
 
 
-    public function send_verification_code($user)
+    public function send_verification_code($manager)
     {
-        $user_id = $user->id;
+        $manager_id = $manager->id;
         $code = mt_rand(100000, 999999);
         $details = [
             'title' => 'Hello',
@@ -53,29 +53,29 @@ class RegisterController extends Controller
         ];
 
         try {
-            Notification::send($user, new EmailVerification($details));
+            Notification::send($manager, new EmailVerification($details));
         } catch (Swift_SwiftException $exception) {
-            User::find($user_id)->delete();
+            Manager::find($manager_id)->delete();
             return response()->json([
                 'message' => 'email does not exist'
             ], 400);
         }
 
         User_verification::create([
-            'user_id' => $user_id,
+            'user_id' => $manager_id,
             'code' => $code
         ]);
 
         return response()->json([
             'message' => 'success',
-            'user' => $user
+            'user' => $manager
         ], 201);
     }
 
 
-    public function Resend_verification_code($user)
+    public function Resend_verification_code($manager)
     {
-        $user_id = $user->id;
+        $manager_id = $manager->id;
         $code = mt_rand(100000, 999999);
         $details = [
             'title' => 'Hello',
@@ -84,8 +84,8 @@ class RegisterController extends Controller
         ];
 
 
-        Notification::send($user, new EmailVerification($details));
-        User_verification::find($user_id)->update(['code' => $code]);
+        Notification::send($manager, new EmailVerification($details));
+        User_verification::find($manager_id)->update(['code' => $code]);
 
         return response()->json([
             'message' => 'success',
@@ -108,7 +108,7 @@ class RegisterController extends Controller
             ], 401);
         $id=$user_verification->user_id;
         $user_verification->delete();
-        $user = User::find($id)->makeVisible(['password']);
+        $user = Manager::find($id)->makeVisible(['password']);
         DB::table('users')->update(['is_activated' => 1, 'email_verified_at' => Carbon::now()]);
         //$user->update(['is_activated' => 1, 'email_verified_at' => Carbon::now()]);
         $user->makeVisible('password');

@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Exceptions\TokenExpiredException;
+use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
@@ -50,12 +53,43 @@ class AuthController extends Controller
         ], 401);
     }
 
-    public function logout()
-    {
-        Auth::logout();
-        return response()->json([
-            'message' => 'success'
-        ], 200);
+    // public function logout()
+    // {
+    //     Auth::logout();
+    //     return response()->json([
+    //         'message' => 'success'
+    //     ], 200);
+    // }
+
+    public function logout( Request $request ) {
+
+        $token = $request->header( 'Authorization' );
+
+        try {
+            JWTAuth::parseToken()->invalidate( $token );
+
+            return response()->json( [
+                'error'   => false,
+                'message' => trans( 'auth.logged_out' )
+            ] );
+        } catch ( TokenExpiredException $exception ) {
+            return response()->json( [
+                'error'   => true,
+                'message' => trans( 'auth.token.expired' )
+
+            ], 401 );
+        } catch ( TokenInvalidException $exception ) {
+            return response()->json( [
+                'error'   => true,
+                'message' => trans( 'auth.token.invalid' )
+            ], 401 );
+
+        } catch ( JWTException $exception ) {
+            return response()->json( [
+                'error'   => true,
+                'message' => trans( 'auth.token.missing' )
+            ], 500 );
+        }
     }
 
 
