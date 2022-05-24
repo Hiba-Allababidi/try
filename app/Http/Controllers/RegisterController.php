@@ -27,7 +27,7 @@ class RegisterController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|between:2,30',
-            'email' => 'required|string|email|unique:users|max:30',
+            'email' => 'required|string|unique:users|max:30',
             'password' => 'required|string|confirmed|min:8'
         ]);
         if ($validator->fails())
@@ -55,7 +55,7 @@ class RegisterController extends Controller
         try {
             Notification::send($user, new EmailVerification($details));
         } catch (Swift_SwiftException $exception) {
-            $user->delete();
+            User::find($user_id)->delete();
             return response()->json([
                 'message' => 'email does not exist'
             ], 400);

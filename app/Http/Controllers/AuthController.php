@@ -29,18 +29,20 @@ class AuthController extends Controller
             $user = User::firstWhere('email', $request->text);
         else
             $user=User::firstWhere('name',$request->text);
-        if ($user->is_activated) {
-            if (Hash::check($request->password, $user->password)){
-            //if($request->password == $user->password){
-                $token = JWTAuth::fromUser($user);
+        if(isset($user)){
+            if ($user->is_activated) {
+                if (Hash::check($request->password, $user->password)){
+                //if($request->password == $user->password){
+                    $token = JWTAuth::fromUser($user);
+                    return response()->json([
+                        'message' => 'success',
+                        'token' => $token
+                    ], 200);
+                }
                 return response()->json([
-                    'message' => 'success',
-                    'token' => $token
-                ], 200);
+                    'message' => 'password is not correct !',
+                ], 401);
             }
-            return response()->json([
-                'message' => 'password is not correct !',
-            ], 401);
         }
         $user->delete();
         return response()->json([
